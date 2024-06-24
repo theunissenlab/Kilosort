@@ -2,6 +2,7 @@ import os
 import pprint
 from pathlib import Path
 import json
+import ast
 
 import numpy as np
 import torch
@@ -274,7 +275,13 @@ class SettingsBox(QtWidgets.QGroupBox):
         for k, p in EXTRA_PARAMETERS.items():
             if self.gui.qt_settings.contains(k):
                 # Use cached value
-                d = str(self.gui.qt_settings.value(k))
+                v = self.gui.qt_settings.value(k)
+                if k == 'drift_smoothing':
+                    # List of floats gets cached as list of strings, so
+                    # have to convert back.
+                    d = str([float(s) for s in v])
+                else:
+                    d = str(v)
             else:
                 # Use default value
                 d = str(p['default'])
@@ -429,13 +436,18 @@ class SettingsBox(QtWidgets.QGroupBox):
 
     def check_valid_binary_path(self, filename):
         if filename is None:
+            print('Binary path is None.')
             return False
         else:
             f = Path(filename)
             if f.exists() and f.is_file():
                 if f.suffix in _ALLOWED_FILE_TYPES or self.use_file_object:
                     return True
+                else:
+                    print(f'Binary file has invalid suffix. Must be {_ALLOWED_FILE_TYPES}')
+                    return False
             else:
+                print('Binary file does not exist at that path.')
                 return False
 
     def disable_all_input(self, value):
@@ -474,7 +486,10 @@ class SettingsBox(QtWidgets.QGroupBox):
         if not self.check_valid_binary_path(self.data_file_path):
             return False
 
-        none_allowed = ['dmin', 'nt0min', 'max_channel_distance', 'x_centers']
+        none_allowed = [
+            'dmin', 'nt0min', 'max_channel_distance', 'x_centers',
+            'shift', 'scale'
+            ]
         for k, v in self.settings.items():
             if v is None and k not in none_allowed:
                 print(f'`None` not allowed for parameter {k}.')
@@ -808,7 +823,9 @@ def _check_parameter(sender_obj, main_obj, k, p):
             v = None
         else:
             v = _str_to_type(value, p['type'])
-            if not isinstance(v, bool):
+            if isinstance(v, bool) or isinstance(v, list):
+                pass
+            else:
                 assert v >= p['min']
                 assert v <= p['max']
                 assert v not in p['exclude']
@@ -848,6 +865,8 @@ def _str_to_type(string, dtype):
             v = True
         else:
             raise TypeError(f'{string} should be True or False for bool.')
+    elif dtype is list:
+        v = ast.literal_eval(string)
     else:
         v = dtype(string)
     return v

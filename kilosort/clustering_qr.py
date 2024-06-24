@@ -262,9 +262,9 @@ def x_centers(ops):
         approx_centers = [edges[p] for p in peaks]
 
         # Use these as initial guesses for centroids in k-means to get
-        # a more accurate value for the actual centers. Or, if there's only 1,
+        # a more accurate value for the actual centers. If there's one or none,
         # just look for one centroid.
-        if len(approx_centers) == 1: approx_centers = 1
+        if len(approx_centers) <= 1: approx_centers = 1
 
     centers, distortion = kmeans(ops['xc'], approx_centers, seed=5330)
 
@@ -305,7 +305,6 @@ def run(ops, st, tF,  mode = 'template', device=torch.device('cuda'), progress_b
     dmin = ops['dmin']
     dminx = ops['dminx']
     nskip = ops['settings']['cluster_downsampling']
-    ncomps = ops['settings']['cluster_pcs']
     ycent = y_centers(ops)
     xcent = x_centers(ops)
     nsp = st.shape[0]
@@ -337,7 +336,7 @@ def run(ops, st, tF,  mode = 'template', device=torch.device('cuda'), progress_b
             ix = (minimum_distance == ii)
             Xd, ch_min, ch_max, igood  = get_data_cpu(
                 ops, xy, iC, iclust_template, tF, ycent[kk], xcent[jj], dmin=dmin,
-                dminx=dminx, ncomps=ncomps, ix=ix
+                dminx=dminx, ix=ix
                 )
 
             if Xd is None:
@@ -393,7 +392,7 @@ def run(ops, st, tF,  mode = 'template', device=torch.device('cuda'), progress_b
 
 
 def get_data_cpu(ops, xy, iC, PID, tF, ycenter, xcenter, dmin=20, dminx=32,
-                 ncomps=64, ix=None, merge_dim=True):
+                 ix=None, merge_dim=True):
     PID =  torch.from_numpy(PID).long()
 
     #iU = ops['iU'].cpu().numpy()

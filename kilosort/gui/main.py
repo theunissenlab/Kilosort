@@ -237,6 +237,13 @@ class KiloSortGUI(QtWidgets.QMainWindow):
             self.left_right_splitter.restoreState(
                 self.qt_settings.value('left_right_splitter')
                 )
+        else:
+            # Default to 25/75 split for left/right, 50/50 for settings/probe
+            # NOTE: The large values are used so that QT will divide the extra
+            #       pixels proportionally between the split widgets, which is
+            #       much simpler than figuring out the exact pixel positions.
+            self.left_right_splitter.setSizes([250000, 750000])
+            self.settings_probe_splitter.setSizes([500000, 500000])
 
         # Connect signals
         self.header_box.reset_gui_button.clicked.connect(self.reset_gui)
@@ -325,6 +332,7 @@ class KiloSortGUI(QtWidgets.QMainWindow):
         self.num_channels = settings["n_chan_bin"]
 
         params = settings.copy()
+        params['save_preprocessed_copy'] = self.run_box.save_preproc_check.isChecked()
 
         assert params
 
@@ -358,6 +366,8 @@ class KiloSortGUI(QtWidgets.QMainWindow):
         tmin = self.params['tmin']
         tmax = self.params['tmax']
         artifact = self.params['artifact_threshold']
+        shift = self.params['shift']
+        scale = self.params['scale']
 
         if chan_map.max() >= n_channels:
             raise ValueError(
@@ -375,6 +385,8 @@ class KiloSortGUI(QtWidgets.QMainWindow):
             tmin=tmin,
             tmax=tmax,
             artifact_threshold=artifact,
+            shift=shift,
+            scale=scale,
             file_object=self.file_object
         )
 
@@ -396,6 +408,8 @@ class KiloSortGUI(QtWidgets.QMainWindow):
             tmin=tmin,
             tmax=tmax,
             artifact_threshold=artifact,
+            shift=shift,
+            scale=scale,
             file_object=self.file_object
         ) as bin_file:
             self.context.whitening_matrix = preprocessing.get_whitening_matrix(
@@ -417,6 +431,8 @@ class KiloSortGUI(QtWidgets.QMainWindow):
             tmin=tmin,
             tmax=tmax,
             artifact_threshold=artifact,
+            shift=shift,
+            scale=scale,
             file_object=self.file_object
         )
 

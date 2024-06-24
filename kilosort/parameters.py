@@ -112,6 +112,34 @@ EXTRA_PARAMETERS = {
             """
     },
 
+    'shift': {
+        'gui_name': 'shift', 'type': float, 'min': -np.inf, 'max': np.inf,
+        'exclude': [], 'default': None, 'step': 'data',
+        'description':
+            """
+            Scalar shift to apply to data before all other operations. In most
+            cases this should be left as None, but may be necessary for float32
+            data for example. If needed, `shift` and `scale` should be set such
+            that data is roughly in the range -100 to +100.
+            
+            If set, data will be `data = data*scale + shift`.
+            """
+    },
+
+    'scale': {
+        'gui_name': 'scale', 'type': float, 'min': -np.inf, 'max': np.inf,
+        'exclude': [], 'default': None, 'step': 'data',
+        'description':
+            """
+            Scaling factor to apply to data before all other operations. In most
+            cases this should be left as None, but may be necessary for float32
+            data for example. If needed, `shift` and `scale` should be set such
+            that data is roughly in the range -100 to +100.
+            
+            If set, data will be `data = data*scale + shift`.
+            """
+    },
+
     ### PREPROCESSING
     'artifact_threshold': {
         'gui_name': 'artifact threshold', 'type': float, 'min': 0, 'max': np.inf,
@@ -157,8 +185,19 @@ EXTRA_PARAMETERS = {
         'exclude': [0], 'default': 20, 'step': 'preprocessing',
         'description':
             """
-            For drift correction, sigma for interpolation (spatial standard
-            deviation). Approximate smoothness scale in units of microns.
+            Approximate spatial smoothness scale in units of microns.
+            """
+    },
+
+    'drift_smoothing': {
+        'gui_name': 'drift smoothing', 'type': list, 'min': None, 'max': None,
+        'exclude': [], 'default': [0.5, 0.5, 0.5], 'step': 'preprocessing',
+        'description':
+            """
+            Amount of gaussian smoothing to apply to the spatiotemporal drift
+            estimation, for x,y,time axes in units of registration blocks
+            (for x,y axes) and batch size (for time axis). The x,y smoothing has
+            no effect for `nblocks = 1`.
             """
     },
 
@@ -321,15 +360,6 @@ EXTRA_PARAMETERS = {
             """
     },
 
-    'cluster_pcs': {
-        'gui_name': 'cluster pcs', 'type': int, 'min': 1, 'max': np.inf,
-        'exclude': [], 'default': 64, 'step': 'clustering',
-        'description':
-            """
-            Maximum number of spatiotemporal PC features used for clustering.
-            """
-    },
-
     'x_centers': {
         'gui_name': 'x centers', 'type': int, 'min': 1,
         'max': np.inf, 'exclude': [], 'default': None, 'step': 'clustering',
@@ -345,13 +375,17 @@ EXTRA_PARAMETERS = {
 
 
     ### POSTPROCESSING
-    'duplicate_spike_bins': {
-        'gui_name': 'duplicate spike bins', 'type': int, 'min': 0, 'max': np.inf,
-        'exclude': [], 'default': 7, 'step': 'postprocessing',
+    'duplicate_spike_ms': {
+        'gui_name': 'duplicate spike ms', 'type': float, 'min': 0, 'max': np.inf,
+        'exclude': [], 'default': 0.25, 'step': 'postprocessing',
         'description':
             """
-            Number of bins for which subsequent spikes from the same cluster are
+            Time in ms for which subsequent spikes from the same cluster are
             assumed to be artifacts. A value of 0 disables this step.
+
+            NOTE: this was formerly handled by `duplicate_spike_bins`, which has
+            been deprecated. The new default of 0.25ms is equivalent to the old
+            default of 7 bins for a 30kHz sampling rate.
             """
     },
 }

@@ -13,7 +13,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/MouseLand/kilosort?style=social)](https://github.com/MouseLand/kilosort/)
 
 
-You can run Kilosort4 without installing it locally using google colab. An example colab notebook is available [here](https://colab.research.google.com/drive/1gFZa8TEBDXmg_CB5RwuT_52Apl3hP0Ie?usp=sharing). It will download some test data, run kilosort4 on it, and show some plots. Talk describing Kilosort4 is [here](https://www.youtube.com/watch?v=LTSmoACr918). 
+You can run Kilosort4 without installing it locally using google colab. An example colab notebook is available here: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/mouseland/kilosort/blob/main/docs/tutorials/kilosort4.ipynb). It will download some test data, run kilosort4 on it, and show some plots. Talk describing Kilosort4 is [here](https://www.youtube.com/watch?v=LTSmoACr918). 
 
 Example notebooks are provided in the `docs/source/tutorials` folder and in the [docs](https://kilosort.readthedocs.io/en/latest/tutorials/tutorials.html). The notebooks include: 
 
@@ -24,11 +24,13 @@ Example notebooks are provided in the `docs/source/tutorials` folder and in the 
 **If you use Kilosort1-4, please cite the [paper](https://www.nature.com/articles/s41592-024-02232-7):**     
 Pachitariu, M., Sridhar, S., Pennington, J., & Stringer, C. (2024). Spike sorting with Kilosort4.
 
-**Note on multi-shank probes** : We are aware of some issues with sorting data from probes with multiple shanks or 2D arrays. See [documentation here](https://kilosort.readthedocs.io/en/latest/multi_shank.html) for recommended workarounds until the code is updated to handle these probes.
+**Reusing parameters from previous versions**: This probably will not work well. Kilosort4 is a new algorithm, and the main parameters (the thresholds) can affect the results in a different way for your data. Please start with the default parameters and adjust from there based on what you see in Phy. For descriptions of Kilosort4's parameters, you can mouse-over their names in the GUI or look at `kilosort.parameters.py`.
 
-**Note on reusing parameters from previous versions**: This probably will not work well. Kilosort4 is a new algorithm, and the main parameters (the thresholds) can affect the results in a different way for your data. Please start with the default parameters and adjust from there based on what you see in Phy. 
+**Running Kilosort4 with SpikeInterface**: We do not provide support for SpikeInterface, and are not involved in their development (or vise-versa). If you encounter problems running Kilosort4 through SpikeInterface, please try running Kilosort4 directly instead. In particular, the KS4 GUI is a useful tool for checking that your probe and data are formatted correctly.
 
 **Warning** :bangbang:: There were two bugs in Kilosort 2, 2.5 and 3 (but not 4) which caused fewer spikes to be detected in ~7ms periods at batch boundaries (every 2.1866s, issue #594). The patch1 releases fix these bugs, please use the new default NT and ntbuff parameters. 
+
+
 
 ## Installation
 

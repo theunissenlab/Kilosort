@@ -1,5 +1,6 @@
 from io import StringIO
-import warnings
+import logging
+logger = logging.getLogger(__name__)
 
 from torch.nn.functional import max_pool2d, avg_pool2d, conv1d, max_pool1d
 import numpy as np
@@ -84,19 +85,34 @@ def get_waves(ops, device=torch.device('cuda')):
     return wPCA, wTEMP
 
 def template_centers(ops):
-    xmin, xmax, ymin, ymax = ops['xc'].min(), ops['xc'].max(), \
-                             ops['yc'].min(), ops['yc'].max()
-
+    shank_idx = ops['kcoords']
+    xc = ops['xc']
+    yc = ops['yc']
     dmin = ops['settings']['dmin']
     if dmin is None:
         # Try to determine a good value automatically based on contact positions.
-        dmin = np.median(np.diff(np.unique(ops['yc'])))
+        y_uniq = np.unique(yc)
+        if y_uniq.size == 1:
+            dmin = 1
+        else:
+            dmin = np.median(np.diff(np.unique(y_uniq)))
     ops['dmin'] = dmin
-    ops['yup'] = np.arange(ymin, ymax+.00001, dmin/2)
-
     ops['dminx'] = dminx = ops['settings']['dminx']
-    nx = np.round((xmax - xmin) / (dminx/2)) + 1
-    ops['xup'] = np.linspace(xmin, xmax, int(nx))
+
+    # Iteratively determine template placement for each shank separately.
+    yup = np.array([])
+    xup = np.array([])
+    for i in np.unique(shank_idx):
+        xc_i = xc[shank_idx == i]
+        yc_i = yc[shank_idx == i]
+        xmin, xmax, ymin, ymax = xc_i.min(), xc_i.max(), yc_i.min(), yc_i.max()
+
+        yup = np.concatenate([yup, np.arange(ymin, ymax+.00001, dmin/2)])
+        nx = np.round((xmax - xmin) / (dminx/2)) + 1
+        xup = np.concatenate([xup, np.linspace(xmin, xmax, int(nx))])
+
+    ops['yup'] = yup
+    ops['xup'] = xup
 
     # Set max channel distance based on dmin, dminx, use whichever is greater.
     if ops.get('max_channel_distance', None) is None:
@@ -183,7 +199,7 @@ def run(ops, bfile, device=torch.device('cuda'), progress_bar=None):
     nsizes = ops['settings']['template_sizes'] 
 
     if ops['settings']['templates_from_data']:
-        print('Re-computing universal templates from data.')
+        logger.info('Re-computing universal templates from data.')
         # Determine templates and PC features from data.
         ops['wPCA'], ops['wTEMP'] = extract_wPCA_wTEMP(
             ops, bfile, nt=ops['nt'], twav_min=ops['nt0min'], 
@@ -191,7 +207,7 @@ def run(ops, bfile, device=torch.device('cuda'), progress_bar=None):
             device=device
             )
     else:
-        print('Using built-in universal templates.')
+        logger.info('Using built-in universal templates.')
         # Use pre-computed templates.
         ops['wPCA'], ops['wTEMP'] = get_waves(ops, device=device)
 
@@ -245,7 +261,7 @@ def run(ops, bfile, device=torch.device('cuda'), progress_bar=None):
         xfeat = xsub @ ops['wPCA'].T
         tF[k:k+nsp] = xfeat.transpose(0,1).cpu().numpy()
 
-        st[k:k+nsp,0] = ((xy[:,1]-nt)/ops['fs'] + ibatch * (ops['batch_size']/ops['fs'])).cpu().numpy()
+        st[k:k+nsp,0] = ((xy[:,1].cpu().numpy()-nt)/ops['fs'] + ibatch * (ops['batch_size']/ops['fs']))
         st[k:k+nsp,1] = yct.cpu().numpy()
         st[k:k+nsp,2] = amp.cpu().numpy()
         st[k:k+nsp,3] = imax.cpu().numpy()
