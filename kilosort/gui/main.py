@@ -254,15 +254,13 @@ class KiloSortGUI(QtWidgets.QMainWindow):
         # Connect signals
         self.header_box.reset_gui_button.clicked.connect(self.reset_gui)
         self.settings_box.settingsUpdated.connect(self.load_data)
-        self.settings_box.previewProbe.connect(self.probe_view_box.preview_probe)
+        self.settings_box.previewProbe.connect(self.set_parameters)
+        self.settings_box.previewProbe.connect(self.probe_view_box.set_layout)
         # Don't allow spike sorting to run until new data has actually
         # been loaded.
         self.settings_box.dataChanged.connect(self.disable_run)
 
-        self.data_view_box.channelChanged.connect(self.probe_view_box.update_probe_view)
-        self.data_view_box.modeChanged.connect(
-            self.probe_view_box.synchronize_data_view_mode
-        )
+        self.data_view_box.channelChanged.connect(self.probe_view_box.set_layout)
         self.data_view_box.intervalUpdated.connect(self.load_data)
 
         self.run_box.updateContext.connect(self.update_context)
@@ -340,6 +338,9 @@ class KiloSortGUI(QtWidgets.QMainWindow):
 
         params = settings.copy()
         params['save_preprocessed_copy'] = self.run_box.save_preproc_check.isChecked()
+        params['clear_cache'] = self.run_box.clear_cache_check.isChecked()
+        params['do_CAR'] = self.run_box.do_CAR_check.isChecked()
+        params['invert_sign'] = self.run_box.invert_sign_check.isChecked()
 
         assert params
 
