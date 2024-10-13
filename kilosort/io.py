@@ -30,7 +30,7 @@ def find_binary(data_dir: Union[str, os.PathLike]) -> Path:
                 + list(data_dir.glob('*.dat')) + list(data_dir.glob('*.raw'))
     if len(filenames) == 0:
         raise FileNotFoundError(
-            'No binary file found in folder. Expected extensions are:\n'
+            f'No binary file found in {data_dir}. Expected extensions are:\n'
             '*.bin, *.bat, *.dat, or *.raw.'
             )
 
@@ -110,7 +110,8 @@ def load_probe(probe_path):
                 probe[k] = np.array(v, dtype=dtype)
 
     for n in required_keys:
-        assert n in probe.keys()
+        if n not in probe.keys():
+            raise ValueError(f'Missing required key: {n} after loading probe.')
 
     # Verify that all arrays have the same size.
     size = None
